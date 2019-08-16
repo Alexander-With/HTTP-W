@@ -1,0 +1,20 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build program on WSL",
+			"type": "shell",
+			"command": "g++",
+			"args": [
+				"-g",
+				"-o",
+				"/home/alexander/projects/http_server.out",
+				"http_server.cpp"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
