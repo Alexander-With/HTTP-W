@@ -1,4 +1,4 @@
-// Server side C/C++ program to demonstrate Socket programming
+// HTTP-W
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -7,10 +7,13 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <time.h>
-#include <chrono>
 #include <string>
 #include <fstream>
 #include <sstream>
+
+#include "http_response.h"
+#include "http_mime.h"
+
 #define PORT 8080
 
 int readUntilHttpEnd(int sock, char* dest, int size){
@@ -39,34 +42,26 @@ std::string getfile(std::string get_str){
 	return file_dir;
 }
 
-std::string http_200(std::string doc, std::string type = "text/html"){
-	char a[64];
-	
-	std::string response = "HTTP/1.1 200 OK\r\n";
-	snprintf(a, sizeof(a), "Content-Length: %lu\r\n", doc.size());
-	response.append(a);
-	response.append("Content-Type: ");
-	response.append(type);
-	response.append("; charset: utf-8\r\n");
-	response.append("X-Powered-By: HTTP-W/0.1\r\n");
-	response.append("Connection: close\r\n");
-	response.append("\r\n");
-	response.append(doc);
+struct verbose_struct{
+    std::string text;
+    std::string color;
+    struct sockaddr_in address;
+};
 
-	return response;
-}
+void verbose(verbose_struct v){
+    char s[1000];
+    time_t tt = time(NULL);
+    struct tm *p = localtime(&tt);
+    strftime(s, 1000, "[%a %b %T %Y]", p);
 
-std::string http_404(){
-	std::string response = "HTTP/1.0 404 Not Found\r\n";
-	response.append("Content-Length: 0\r\n");
-	response.append("Content-Type: text/plain\r\n");
-	response.append("X-Powered-By: HTTP-W/0.1\r\n");
-	response.append("Connection: close\r\n");
-	response.append("\r\n");
-	return response;
+    printf("%s %s:%5u ", s, inet_ntoa(v.address.sin_addr), v.address.sin_port);
+    printf("%s", v.color.c_str());
+    printf("%s", v.text.c_str());
+    printf("\x1b[0m\n");
 }
 
 int main(int argc, char const *argv[]){
+    
 	int server_fd, new_socket, valread;
 	struct sockaddr_in address;
 	int opt = 1;
@@ -103,11 +98,9 @@ int main(int argc, char const *argv[]){
 			perror("accpet");
 			exit(EXIT_FAILURE);
 		}
-		// printf("Connecting from %s\n", inet_ntoa(address.sin_addr));
 		valread = readUntilHttpEnd(new_socket, buffer, sizeof(buffer));
 		
 		if(valread > 0){
-			std::string get_str;
 			std::string getdata_str;
 			char tempget[1] = {0};
 			char *get = &buffer[4];
@@ -123,14 +116,10 @@ int main(int argc, char const *argv[]){
 			}
 			*filerequest = 0;
 
-			get_str = get;
-			// printf("\t%s\n", get);
-			// printf("\t%s\n", getdata);
+            std::string file_dir = getfile((std::string) get);
 
-			std::string file_dir = getfile(get_str);
-			
-			std::ifstream infile(file_dir);
-			std::string response;
+            std::ifstream infile(file_dir);
+            std::string response;
 
 			char s[1000];
 			time_t tt = time(NULL);
@@ -138,31 +127,32 @@ int main(int argc, char const *argv[]){
 
 			strftime(s, 1000, "[%a %b %T %Y]", p);
 
-			printf("%s %s:%5u ", s, inet_ntoa(address.sin_addr), address.sin_port);
-			if(!infile){
-				printf("\33[1;31m");
-				printf("[404]: %s - No such file or directory\n", get);
-				printf("\33[0m");
+            verbose_struct v;
+            v.address = address;
+            if(!infile){
+                // Verbose to Console
+                v.color = "\e[31m";
+                v.text = "[404]: " + (std::string) get + " - No such file or directory";
+                verbose(v);
+                
 				response = http_404();
 			}
 			else{
 				std::stringstream fbuffer;
 				fbuffer << infile.rdbuf();
 				std::string fstr = fbuffer.str();
-				printf("\33[1;32m");
-				printf("[200]: %s\n", get);
-				printf("\33[0m");
-				fflush(0);
-				if(get_str == "/favicon.ico")
-					response = http_200(fstr, "image/x-icon");
-				else
-					response = http_200(fstr);
-			}
+                // Verbose to Console
+                v.color = "\e[32m";
+                v.text = "[200]: " + (std::string)get;
+                verbose(v);
+
+                fflush(0);
+                std::string mime = getmime((std::string) file_dir);
+                response = http_200(fstr, mime);
+            }
 			infile.close();
 			send(new_socket, response.c_str(), response.size(), 0);
 		}
 		close(new_socket);
-		// printf("Connection Closed\n");
-		// printf("-------------------------------\n");
 	}
 }
