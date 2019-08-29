@@ -2,6 +2,7 @@
 #include "http_ssl.h"
 
 void init_openssl(){
+//    SSL_library_init();
 	SSL_load_error_strings();
 	OpenSSL_add_ssl_algorithms();
 }
@@ -17,6 +18,10 @@ SSL_CTX *create_context(){
     method = SSLv23_server_method();
 
     ctx = SSL_CTX_new(method);
+
+    SSL_CTX_set_mode(ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
+    SSL_CTX_set_mode(ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+
 	if (!ctx)
 	{
 		perror("Unable to create SSL context");
@@ -46,8 +51,8 @@ void configure_context(SSL_CTX *ctx){
 	// 	ERR_print_errors_fp(stderr);
 	// 	exit(EXIT_FAILURE);
 	// }
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-    SSL_CTX_set_verify_depth(ctx, 4);
+//    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+//    SSL_CTX_set_verify_depth(ctx, 4);
 }
 
 void showCerts(SSL *ssl){
@@ -99,7 +104,7 @@ void loadCertificates(SSL_CTX *ctx, char *CertFile, char *KeyFile){
     }
 
     //New lines - Force the client-side have a certificate
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-    SSL_CTX_set_verify_depth(ctx, 4);
+//    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+//    SSL_CTX_set_verify_depth(ctx, 4);
     //End new lines
 }
