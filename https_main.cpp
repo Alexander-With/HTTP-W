@@ -14,6 +14,9 @@
 
 #define PORT 8080
 
+
+// openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 10000 -nodes
+
 int main(int argc, char const *argv[])
 {
     SSL_CTX *ctx;
@@ -42,11 +45,14 @@ int main(int argc, char const *argv[])
         ssl = SSL_new(ctx);
         SSL_set_fd(ssl, client);
 
-        if(SSL_accept(ssl) <= 0){
+        ERR_clear_error();
+        auto ret = SSL_accept(ssl);
+//        fprintf(stderr, "SSL_accept: %d   %d\n", ret, SSL_get_error(ssl, ret));
+        if(ret <= 0){
             ERR_print_errors_fp(stderr);
         }
         else{
-            showCerts(ssl);
+//            showCerts(ssl);
             valread = SSL_read(ssl, buffer, sizeof(buffer));
 
             if (valread > 0)
@@ -55,6 +61,7 @@ int main(int argc, char const *argv[])
                 SSL_write(ssl, response.c_str(), response.size());
             }
         }
+        SSL_shutdown(ssl);
         SSL_free(ssl);
         close(client);
     }
