@@ -2,17 +2,40 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build program on WSL",
+            "label": "Build HTTP Server",
             "type": "shell",
             "command": "g++",
             "args": [
                 "-std=c++11",
                 "-g",
                 "-o",
-                "/home/alexander/projects/http_server.out",
+                "/home/alexander/projects/http/http_server.out",
+                "http_main.cpp",
                 "http_server.cpp",
                 "http_response.cpp",
                 "http_mime.cpp"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build HTTPS Server",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-std=c++11",
+                "-g",
+                "-o",
+                "/home/alexander/projects/http/https_server.out",
+                "https_main.cpp",
+                "http_server.cpp",
+                "http_response.cpp",
+                "http_mime.cpp",
+                "http_ssl.cpp",
+                "-lssl",
+                "-lcrypto"
             ],
             "group": {
                 "kind": "build",
