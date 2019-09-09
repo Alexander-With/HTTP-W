@@ -2,7 +2,6 @@
 #include "http_ssl.h"
 
 void init_openssl(){
-//    SSL_library_init();
 	SSL_load_error_strings();
 	OpenSSL_add_ssl_algorithms();
 }
@@ -15,6 +14,8 @@ SSL_CTX *create_context(){
 	const SSL_METHOD *method;
 	SSL_CTX *ctx;
 
+    // Change to TLS_server_method()
+    // Need OpenSSL 1.1.1 for this
     method = SSLv23_server_method();
 
     ctx = SSL_CTX_new(method);
@@ -40,19 +41,6 @@ void configure_context(SSL_CTX *ctx){
 
 	/* Set the key and cert */
     loadCertificates(ctx, CertFile, KeyFile);
-    // if (SSL_CTX_use_certificate_file(ctx, "cert.pem", SSL_FILETYPE_PEM) <= 0)
-	// {
-	// 	ERR_print_errors_fp(stderr);
-	// 	exit(EXIT_FAILURE);
-	// }
-
-	// if (SSL_CTX_use_PrivateKey_file(ctx, "key.pem", SSL_FILETYPE_PEM) <= 0)
-	// {
-	// 	ERR_print_errors_fp(stderr);
-	// 	exit(EXIT_FAILURE);
-	// }
-//    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-//    SSL_CTX_set_verify_depth(ctx, 4);
 }
 
 void showCerts(SSL *ssl){
@@ -102,9 +90,18 @@ void loadCertificates(SSL_CTX *ctx, char *CertFile, char *KeyFile){
         fprintf(stderr, "Private key does not match the public certificate\n");
         abort();
     }
+}
 
-    //New lines - Force the client-side have a certificate
-//    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-//    SSL_CTX_set_verify_depth(ctx, 4);
-    //End new lines
+void ssl_show_error_stack()
+{
+    // Show the error stack
+    auto idx = 0u;
+    do
+    {
+        auto err = ERR_get_error();
+        if (err == 0)
+            break;
+        fprintf(stderr,"#%u SSL_ERR: %lu - %s\n", idx, err, ERR_reason_error_string(err));
+        idx++;
+    } while (1);
 }

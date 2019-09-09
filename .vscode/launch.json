@@ -8,10 +8,10 @@
                 "name": "(gdb) Launch",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "/home/alexander/projects/http_server.out",
+                "program": "/home/alexander/projects/http/http_server.out",
                 "args": [""],
                 "stopAtEntry": false,
-                "cwd": "/home/alexander/projects/",
+                "cwd": "/home/alexander/projects/http/",
                 "environment": [],
                 "externalConsole": true,
                 "windows": {

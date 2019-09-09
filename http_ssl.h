@@ -1,3 +1,4 @@
+#include <string>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
@@ -7,3 +8,4 @@ SSL_CTX *create_context();
 void configure_context(SSL_CTX *ctx);
 void showCerts(SSL *ssl);
 void loadCertificates(SSL_CTX *ctx, char *CertFile, char *KeyFile);
+void ssl_show_error_stack();
